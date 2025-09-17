@@ -1,5 +1,6 @@
 package dev.doctor4t.trainmurdermystery.game;
 
+import dev.doctor4t.trainmurdermystery.TrainMurderMystery;
 import dev.doctor4t.trainmurdermystery.cca.TrainMurderMysteryComponents;
 import dev.doctor4t.trainmurdermystery.cca.WorldGameComponent;
 import dev.doctor4t.trainmurdermystery.entity.PlayerBodyEntity;
@@ -15,7 +16,9 @@ import net.minecraft.server.world.ServerWorld;
 import net.minecraft.text.Style;
 import net.minecraft.text.Text;
 import net.minecraft.util.math.Vec3d;
+import net.minecraft.world.Difficulty;
 import net.minecraft.world.GameMode;
+import net.minecraft.world.GameRules;
 
 import java.util.*;
 import java.util.function.UnaryOperator;
@@ -25,6 +28,13 @@ public class GameLoop {
         WorldGameComponent game = TrainMurderMysteryComponents.GAME.get(serverWorld);
 
         if (game.isRunning()) {
+            // kill players who fell off the train
+            for (ServerPlayerEntity player : serverWorld.getPlayers()) {
+                if (TrainMurderMystery.shouldRestrictPlayerOptions(player) && player.getY() < 63) {
+                    killPlayer(player, false);
+                }
+            }
+
             // check hitman win condition (all targets are dead)
             WinStatus winStatus = WinStatus.HITMEN;
             for (UUID player : game.getTargets()) {
@@ -56,6 +66,15 @@ public class GameLoop {
     public static void startGame(ServerWorld world) {
         TrainMurderMysteryComponents.TRAIN.get(world).setTrainSpeed(130);
         WorldGameComponent gameComponent = TrainMurderMysteryComponents.GAME.get(world);
+
+        world.getGameRules().get(GameRules.KEEP_INVENTORY).set(true, world.getServer());
+        world.getGameRules().get(GameRules.DO_WEATHER_CYCLE).set(false, world.getServer());
+        world.getGameRules().get(GameRules.DO_DAYLIGHT_CYCLE).set(false, world.getServer());
+        world.getGameRules().get(GameRules.DO_MOB_GRIEFING).set(false, world.getServer());
+        world.getGameRules().get(GameRules.DO_MOB_SPAWNING).set(false, world.getServer());
+        world.getGameRules().get(GameRules.ANNOUNCE_ADVANCEMENTS).set(false, world.getServer());
+        world.getGameRules().get(GameRules.DO_TRADER_SPAWNING).set(false, world.getServer());
+        world.getServer().setDifficulty(Difficulty.PEACEFUL, true);
 
         List<ServerPlayerEntity> playerPool = new ArrayList<>(world.getPlayers().stream().filter(serverPlayerEntity -> !serverPlayerEntity.isInCreativeMode() && !serverPlayerEntity.isSpectator()).toList());
 
