@@ -61,13 +61,13 @@ public class TMM implements ModInitializer {
 // TODO: - Change mood down effect from speed to something else (to prevent players being able to innocent each other on an easily observable change)
 
 // TORECORD: Fixing the hitman
-// TODO: Remove target system and make the win condition a kill count
+// TORECORD: Remove target system and make the win condition a kill count
 // TORECORD: Hitman item shop
 // TORECORD: Fixing the knife (now with a kill indicator, also show new name system to allow anyone to know player's names)
 // TORECORD: New name system shows who else is the hitman allowing them to scheme together
 // TODO: - Explosive for clumped up people (foils the grouping up cheese)
 // TORECORD: - Poison (poisons the next food or drink item)
-// TODO: - Scorpion (poisons the next person sleeping in the bed)
+// TORECORD: - Scorpion (poisons the next person sleeping in the bed)
 // TORECORD: Getting food poisoned and then scorpion poisoned lowers the timer
 // TODO: - Gun with one bullet (allows the hitman to potentially pass as a detective / passenger with a gun on top of giving a ranged option)
 // TODO: - Psycho mode (wanted to have an anonymous killer originally for the horror element, this also allows the hitman to go crazy how some wanted to)
