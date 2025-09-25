@@ -2,6 +2,7 @@ package dev.doctor4t.trainmurdermystery.client.gui;
 
 import dev.doctor4t.trainmurdermystery.cca.PlayerPsychoComponent;
 import dev.doctor4t.trainmurdermystery.cca.TMMComponents;
+import dev.doctor4t.trainmurdermystery.cca.WorldBlackoutComponent;
 import net.minecraft.client.font.TextRenderer;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.network.ClientPlayerEntity;
@@ -21,46 +22,48 @@ public class RoleNameRenderer {
     private static Text nametag = Text.empty();
 
     public static void renderHud(TextRenderer renderer, @NotNull ClientPlayerEntity player, DrawContext context, RenderTickCounter tickCounter) {
-        var component = TMMComponents.GAME.get(player.getWorld());
-        var result = ProjectileUtil.getCollision(player, entity -> entity instanceof PlayerEntity, 2f);
-        if (result instanceof EntityHitResult entityHitResult && entityHitResult.getEntity() instanceof PlayerEntity target) {
-            nametagAlpha = MathHelper.lerp(tickCounter.getTickDelta(true) / 4, nametagAlpha, 1f);
-            nametag = target.getDisplayName();
+        if (WorldBlackoutComponent.KEY.get(player.getWorld()).isBlackoutActive()) {
+            var component = TMMComponents.GAME.get(player.getWorld());
+            var result = ProjectileUtil.getCollision(player, entity -> entity instanceof PlayerEntity, 2f);
+            if (result instanceof EntityHitResult entityHitResult && entityHitResult.getEntity() instanceof PlayerEntity target) {
+                nametagAlpha = MathHelper.lerp(tickCounter.getTickDelta(true) / 4, nametagAlpha, 1f);
+                nametag = target.getDisplayName();
 
-            if (component.isHitman(target)) {
-                targetRole = TrainRole.HITMAN;
+                if (component.isHitman(target)) {
+                    targetRole = TrainRole.HITMAN;
+                } else {
+                    targetRole = TrainRole.BYSTANDER;
+                }
+
+                boolean shouldObfuscate = targetRole == TrainRole.BYSTANDER && PlayerPsychoComponent.KEY.get(target).getPsychoTicks() > 0;
+
+                nametag = shouldObfuscate
+                        ? Text.literal("urscrewed" + "X".repeat(Random.createThreadSafe().nextInt(8)))
+                        .styled(style -> style.withFormatting(Formatting.OBFUSCATED, Formatting.DARK_RED))
+                        : nametag;
             } else {
-                targetRole = TrainRole.BYSTANDER;
+                nametagAlpha = MathHelper.lerp(tickCounter.getTickDelta(true) / 4, nametagAlpha, 0f);
             }
-
-            boolean shouldObfuscate = targetRole == TrainRole.BYSTANDER && PlayerPsychoComponent.KEY.get(target).getPsychoTicks() > 0;
-
-            nametag = shouldObfuscate
-                    ? Text.literal("urscrewed" + "X".repeat(Random.createThreadSafe().nextInt(8)))
-                    .styled(style -> style.withFormatting(Formatting.OBFUSCATED, Formatting.DARK_RED))
-                    : nametag;
-        } else {
-            nametagAlpha = MathHelper.lerp(tickCounter.getTickDelta(true) / 4, nametagAlpha, 0f);
-        }
-        if (nametagAlpha > 0.05f) {
-            context.getMatrices().push();
-            context.getMatrices().translate(context.getScaledWindowWidth() / 2f, context.getScaledWindowHeight() / 2f + 6, 0);
-            context.getMatrices().scale(0.6f, 0.6f, 1f);
-            var nameWidth = renderer.getWidth(nametag);
-            context.drawTextWithShadow(renderer, nametag, -nameWidth / 2, 16, MathHelper.packRgb(1f, 1f, 1f) | ((int) (nametagAlpha * 255) << 24));
-            if (component.isRunning()) {
-                var playerRole = TrainRole.BYSTANDER;
-                if (component.isHitman(player)) {
-                    playerRole = TrainRole.HITMAN;
+            if (nametagAlpha > 0.05f) {
+                context.getMatrices().push();
+                context.getMatrices().translate(context.getScaledWindowWidth() / 2f, context.getScaledWindowHeight() / 2f + 6, 0);
+                context.getMatrices().scale(0.6f, 0.6f, 1f);
+                var nameWidth = renderer.getWidth(nametag);
+                context.drawTextWithShadow(renderer, nametag, -nameWidth / 2, 16, MathHelper.packRgb(1f, 1f, 1f) | ((int) (nametagAlpha * 255) << 24));
+                if (component.isRunning()) {
+                    var playerRole = TrainRole.BYSTANDER;
+                    if (component.isHitman(player)) {
+                        playerRole = TrainRole.HITMAN;
+                    }
+                    if (playerRole == TrainRole.HITMAN && targetRole == TrainRole.HITMAN) {
+                        context.getMatrices().translate(0, 20 + renderer.fontHeight, 0);
+                        var roleText = Text.literal("HITMAN COHORT");
+                        var roleWidth = renderer.getWidth(roleText);
+                        context.drawTextWithShadow(renderer, roleText, -roleWidth / 2, 0, MathHelper.packRgb(1f, 0f, 0f) | ((int) (nametagAlpha * 255) << 24));
+                    }
                 }
-                if (playerRole == TrainRole.HITMAN && targetRole == TrainRole.HITMAN) {
-                    context.getMatrices().translate(0, 20 + renderer.fontHeight, 0);
-                    var roleText = Text.literal("HITMAN COHORT");
-                    var roleWidth = renderer.getWidth(roleText);
-                    context.drawTextWithShadow(renderer, roleText, -roleWidth / 2, 0, MathHelper.packRgb(1f, 0f, 0f) | ((int) (nametagAlpha * 255) << 24));
-                }
+                context.getMatrices().pop();
             }
-            context.getMatrices().pop();
         }
     }
 

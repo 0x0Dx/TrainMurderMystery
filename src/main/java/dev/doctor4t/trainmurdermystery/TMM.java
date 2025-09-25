@@ -111,6 +111,7 @@ public class TMM implements ModInitializer {
 //              Ambience can be heard by all players, so you know when to run. Also gives a use to rooms as you can hide in them
 // TORECORD: - Light turn off item + true darkness (increases the horror aspect + amazing scenario of lights turning off and someone being dead when they turn back on + blackout and psycho mode)
 //              True darkness doesn't work that well because of skylight seeping into the block, add a light barrier block that blocks it from entering
+//              Disable name renderer for the duration of the blackout to prevent people seeing in the dark
 // TODO: - Firecracker (luring people, shooting the gun in spectator often led to people rushing in from curiosity, allowing the hitman to manipulate players)
 // TODO: - Note (allows the hitman to leave messages, fun for encouraging the roleplay aspect)
 
@@ -121,6 +122,7 @@ public class TMM implements ModInitializer {
 
 // TORECORD: Fixing the map
 // TODO: Rearrange the train cars to prevent all POIs being separated by all the sleeping cars
+// TODO: Add light barrier blocks to the whole train
 
 // TORECORD: Polish
 // TODO: Train chimney smoke + ringable horn, triggers game start in lobby and end of game

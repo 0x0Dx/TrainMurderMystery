@@ -52,6 +52,10 @@ public class WorldBlackoutComponent implements AutoSyncedComponent, ServerTickin
         if (this.ticks > 0) this.ticks--;
     }
 
+    public boolean isBlackoutActive() {
+        return this.ticks > 0;
+    }
+
     public boolean triggerBlackout() {
         var area = GameConstants.PLAY_AREA;
         if (this.ticks > 0) return false;
