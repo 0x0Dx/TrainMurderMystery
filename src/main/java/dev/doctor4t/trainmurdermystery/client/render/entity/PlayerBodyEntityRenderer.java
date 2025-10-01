@@ -43,7 +43,7 @@ public class PlayerBodyEntityRenderer<T extends LivingEntity, M extends EntityMo
         matrixStack.push();
         float clamp = MathHelper.clamp((float) (playerBodyEntity.age - GameConstants.TIME_TO_DECOMPOSITION) / GameConstants.DECOMPOSING_TIME, 0, GameConstants.TIME_TO_DECOMPOSITION + GameConstants.DECOMPOSING_TIME);
         float ease = Easing.CUBIC_IN.ease(clamp, 0, -1, 1);
-        if (ease > -3) {
+        if (ease > -1.5f) {
             matrixStack.translate(0, ease, 0);
             float alpha = TMMClient.moodComponent.isLowerThanDepressed() ? MathHelper.lerp(MathHelper.clamp(Easing.SINE_IN.ease(Math.min(1f, (float) playerBodyEntity.age / 100f), 0, 1, 1), 0, 1), 1f, 0f) : 1f;
             this.renderBody(playerBodyEntity, f, g, matrixStack, vertexConsumerProvider, light, alpha);
