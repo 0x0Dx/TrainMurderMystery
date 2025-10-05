@@ -24,6 +24,8 @@ public class ScoreboardRoleSelectorComponent implements AutoSyncedComponent {
     public final MinecraftServer server;
     public final Map<UUID, Integer> killerRounds = new HashMap<>();
     public final Map<UUID, Integer> vigilanteRounds = new HashMap<>();
+    public final List<UUID> forcedKillers = new ArrayList<>();
+    public final List<UUID> forcedVigilantes = new ArrayList<>();
 
     public ScoreboardRoleSelectorComponent(Scoreboard scoreboard, @Nullable MinecraftServer server) {
         this.scoreboard = scoreboard;
@@ -37,8 +39,14 @@ public class ScoreboardRoleSelectorComponent implements AutoSyncedComponent {
         return count;
     }
 
-    public void assignKillers(ServerWorld world, GameWorldComponent gameComponent, @NotNull List<ServerPlayerEntity> players, int killerCount) {
+    public int assignKillers(ServerWorld world, GameWorldComponent gameComponent, @NotNull List<ServerPlayerEntity> players, int killerCount) {
         this.reduceKillers();
+        var killers = new ArrayList<UUID>();
+        for (var uuid : this.forcedKillers) {
+            killers.add(uuid);
+            killerCount--;
+            this.killerRounds.put(uuid, this.killerRounds.getOrDefault(uuid, 1) + 1);
+        }
         var map = new HashMap<ServerPlayerEntity, Float>();
         var total = 0f;
         for (var player : players) {
@@ -46,13 +54,12 @@ public class ScoreboardRoleSelectorComponent implements AutoSyncedComponent {
             map.put(player, weight);
             total += weight;
         }
-        var killers = new ArrayList<ServerPlayerEntity>();
         for (var i = 0; i < killerCount; i++) {
             var random = world.getRandom().nextFloat() * total;
             for (var entry : map.entrySet()) {
                 random -= entry.getValue();
                 if (random <= 0) {
-                    killers.add(entry.getKey());
+                    killers.add(entry.getKey().getUuid());
                     total -= entry.getValue();
                     map.remove(entry.getKey());
                     this.killerRounds.put(entry.getKey().getUuid(), this.killerRounds.getOrDefault(entry.getKey().getUuid(), 1) + 1);
@@ -61,7 +68,7 @@ public class ScoreboardRoleSelectorComponent implements AutoSyncedComponent {
             }
         }
         for (var player : killers) gameComponent.addKiller(player);
-//        if (FabricLoader.getInstance().isDevelopmentEnvironment()) gameComponent.addKiller(UUID.fromString("2793cdc6-7710-4e7e-9d81-cf918e067729"));
+        return killers.size();
     }
 
     private void reduceKillers() {
@@ -70,8 +77,18 @@ public class ScoreboardRoleSelectorComponent implements AutoSyncedComponent {
         for (var times : this.killerRounds.keySet()) this.killerRounds.put(times, this.killerRounds.get(times) - minimum);
     }
 
-    public void assignVigilantes(ServerWorld world, GameWorldComponent gameComponent, @NotNull List<ServerPlayerEntity> players, int killerCount) {
+    public void assignVigilantes(ServerWorld world, GameWorldComponent gameComponent, @NotNull List<ServerPlayerEntity> players, int vigilanteCount) {
         this.reduceVigilantes();
+        var vigilantes = new ArrayList<ServerPlayerEntity>();
+        for (var uuid : this.forcedVigilantes) {
+            var player = world.getPlayerByUuid(uuid);
+            if (player instanceof ServerPlayerEntity serverPlayer && players.contains(serverPlayer) && !gameComponent.isKiller(serverPlayer)) {
+                player.giveItemStack(new ItemStack(TMMItems.REVOLVER));
+                gameComponent.addVigilante(player);
+                vigilanteCount--;
+                this.vigilanteRounds.put(player.getUuid(), this.vigilanteRounds.getOrDefault(player.getUuid(), 1) + 1);
+            }
+        }
         var map = new HashMap<ServerPlayerEntity, Float>();
         var total = 0f;
         for (var player : players) {
@@ -80,8 +97,7 @@ public class ScoreboardRoleSelectorComponent implements AutoSyncedComponent {
             map.put(player, weight);
             total += weight;
         }
-        var vigilantes = new ArrayList<ServerPlayerEntity>();
-        for (var i = 0; i < killerCount; i++) {
+        for (var i = 0; i < vigilanteCount; i++) {
             var random = world.getRandom().nextFloat() * total;
             for (var entry : map.entrySet()) {
                 random -= entry.getValue();

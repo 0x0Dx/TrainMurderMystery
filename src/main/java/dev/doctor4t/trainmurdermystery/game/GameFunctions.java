@@ -25,6 +25,7 @@ import net.minecraft.entity.EntityType;
 import net.minecraft.entity.ItemEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemStack;
+import net.minecraft.item.Items;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
@@ -123,21 +124,20 @@ public class GameFunctions {
             var killerCount = assignRolesAndGetKillerCount(world, players, gameComponent);
 
             for (var player : players) {
-                ServerPlayNetworking.send(player, new AnnounceWelcomePayload((gameComponent.isKiller(player) ? RoleAnnouncementText.KILLER : gameComponent.isVigilante(player) ? RoleAnnouncementText.VIGILANTE : RoleAnnouncementText.CIVILIAN).ordinal(), killerCount, gameComponent.getKillsLeft()));
+                ServerPlayNetworking.send(player, new AnnounceWelcomePayload((gameComponent.isKiller(player) ? RoleAnnouncementText.KILLER : gameComponent.isVigilante(player) ? RoleAnnouncementText.VIGILANTE : RoleAnnouncementText.CIVILIAN).ordinal(), killerCount, players.size() - killerCount));
             }
+
+            gameComponent.sync();
         }
     }
 
-    private static int assignRolesAndGetKillerCount(ServerWorld world, List<ServerPlayerEntity> players, GameWorldComponent gameComponent) {
+    private static int assignRolesAndGetKillerCount(@NotNull ServerWorld world, @NotNull List<ServerPlayerEntity> players, GameWorldComponent gameComponent) {
         // select roles
         var roleSelector = ScoreboardRoleSelectorComponent.KEY.get(world.getScoreboard());
         var killerCount = (int) Math.floor(players.size() * .2f);
-        roleSelector.assignKillers(world, gameComponent, players, killerCount);
+        var total = roleSelector.assignKillers(world, gameComponent, players, killerCount);
         roleSelector.assignVigilantes(world, gameComponent, players, killerCount);
-
-        // set the kill left count as the percentage of players that are not killers that need to be killed in order to achieve a win
-        gameComponent.setKillsLeft((int) ((players.size() - killerCount) * GameConstants.KILL_COUNT_PERCENTAGE));
-        return killerCount;
+        return total;
     }
 
     private static void baseInitialize(ServerWorld world, TrainWorldComponent trainComponent, GameWorldComponent gameComponent, List<ServerPlayerEntity> players) {
@@ -234,6 +234,8 @@ public class GameFunctions {
                     }
             );
             serverPlayerEntity.giveItemStack(letter);
+
+            serverPlayerEntity.giveItemStack(new ItemStack(TMMItems.NOTE));
         }
 
         gameComponent.setGameStatus(GameWorldComponent.GameStatus.ACTIVE);
@@ -345,7 +347,6 @@ public class GameFunctions {
 
         var gameWorldComponent = TMMComponents.GAME.get(victim.getWorld());
         if (gameWorldComponent.isCivilian(victim)) {
-            gameWorldComponent.decrementKillsLeft();
             GameTimeComponent.KEY.get(victim.getWorld()).addTime(GameConstants.TIME_ON_CIVILIAN_KILL);
         }
 
