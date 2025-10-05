@@ -41,13 +41,11 @@ public class ScoreboardRoleSelectorComponent implements AutoSyncedComponent {
 
     public void assignKillers(ServerWorld world, GameWorldComponent gameComponent, @NotNull List<ServerPlayerEntity> players, int killerCount) {
         this.reduceKillers();
+        var killers = new ArrayList<UUID>();
         for (var uuid : this.forcedKillers) {
-            var player = world.getPlayerByUuid(uuid);
-            if (player instanceof ServerPlayerEntity serverPlayer && players.contains(serverPlayer)) {
-                gameComponent.addKiller(uuid);
-                killerCount--;
-                this.killerRounds.put(player.getUuid(), this.killerRounds.getOrDefault(player.getUuid(), 1) + 1);
-            }
+            killers.add(uuid);
+            killerCount--;
+            this.killerRounds.put(uuid, this.killerRounds.getOrDefault(uuid, 1) + 1);
         }
         var map = new HashMap<ServerPlayerEntity, Float>();
         var total = 0f;
@@ -56,13 +54,12 @@ public class ScoreboardRoleSelectorComponent implements AutoSyncedComponent {
             map.put(player, weight);
             total += weight;
         }
-        var killers = new ArrayList<ServerPlayerEntity>();
         for (var i = 0; i < killerCount; i++) {
             var random = world.getRandom().nextFloat() * total;
             for (var entry : map.entrySet()) {
                 random -= entry.getValue();
                 if (random <= 0) {
-                    killers.add(entry.getKey());
+                    killers.add(entry.getKey().getUuid());
                     total -= entry.getValue();
                     map.remove(entry.getKey());
                     this.killerRounds.put(entry.getKey().getUuid(), this.killerRounds.getOrDefault(entry.getKey().getUuid(), 1) + 1);
@@ -82,11 +79,12 @@ public class ScoreboardRoleSelectorComponent implements AutoSyncedComponent {
 
     public void assignVigilantes(ServerWorld world, GameWorldComponent gameComponent, @NotNull List<ServerPlayerEntity> players, int vigilanteCount) {
         this.reduceVigilantes();
+        var vigilantes = new ArrayList<ServerPlayerEntity>();
         for (var uuid : this.forcedVigilantes) {
             var player = world.getPlayerByUuid(uuid);
             if (player instanceof ServerPlayerEntity serverPlayer && players.contains(serverPlayer) && !gameComponent.isKiller(serverPlayer)) {
-                serverPlayer.giveItemStack(new ItemStack(TMMItems.REVOLVER));
-                gameComponent.addVigilante(uuid);
+                player.giveItemStack(new ItemStack(TMMItems.REVOLVER));
+                gameComponent.addVigilante(player);
                 vigilanteCount--;
                 this.vigilanteRounds.put(player.getUuid(), this.vigilanteRounds.getOrDefault(player.getUuid(), 1) + 1);
             }
@@ -99,7 +97,6 @@ public class ScoreboardRoleSelectorComponent implements AutoSyncedComponent {
             map.put(player, weight);
             total += weight;
         }
-        var vigilantes = new ArrayList<ServerPlayerEntity>();
         for (var i = 0; i < vigilanteCount; i++) {
             var random = world.getRandom().nextFloat() * total;
             for (var entry : map.entrySet()) {

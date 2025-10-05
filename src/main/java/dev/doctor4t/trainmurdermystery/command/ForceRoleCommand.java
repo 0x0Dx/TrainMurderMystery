@@ -20,11 +20,11 @@ import java.util.Collection;
 public class ForceRoleCommand {
     public static void register(@NotNull CommandDispatcher<ServerCommandSource> dispatcher) {
         dispatcher.register(CommandManager.literal("tmm:forceRole").requires(source -> source.hasPermissionLevel(2))
-                .then(CommandManager.literal("killer").then(CommandManager.argument("players", EntityArgumentType.players()))
+                .then(CommandManager.literal("killer").then(CommandManager.argument("players", EntityArgumentType.players())
                         .executes(context -> forceKiller(context.getSource(), EntityArgumentType.getPlayers(context, "players")))
-                ).then(CommandManager.literal("vigilante").then(CommandManager.argument("players", EntityArgumentType.players()))
+                )).then(CommandManager.literal("vigilante").then(CommandManager.argument("players", EntityArgumentType.players())
                         .executes(context -> forceVigilante(context.getSource(), EntityArgumentType.getPlayers(context, "players")))
-                )
+                ))
         );
     }
 

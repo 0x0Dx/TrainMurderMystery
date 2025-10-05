@@ -123,6 +123,8 @@ public class GameFunctions {
             for (var player : players) {
                 ServerPlayNetworking.send(player, new AnnounceWelcomePayload((gameComponent.isKiller(player) ? RoleAnnouncementText.KILLER : gameComponent.isVigilante(player) ? RoleAnnouncementText.VIGILANTE : RoleAnnouncementText.CIVILIAN).ordinal(), killerCount, players.size() - killerCount));
             }
+
+            gameComponent.sync();
         }
     }
 
