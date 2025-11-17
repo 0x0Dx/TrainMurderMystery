@@ -1,0 +1,93 @@
+package dev.doctor4t.trainmurdermystery.cca;
+
+import dev.doctor4t.trainmurdermystery.TMM;
+import dev.doctor4t.trainmurdermystery.game.GameConstants;
+import dev.doctor4t.trainmurdermystery.game.GameFunctions;
+import net.minecraft.nbt.NbtCompound;
+import net.minecraft.registry.RegistryWrapper;
+import net.minecraft.server.world.ServerWorld;
+import net.minecraft.world.World;
+import org.jetbrains.annotations.NotNull;
+import org.ladysnake.cca.api.v3.component.ComponentKey;
+import org.ladysnake.cca.api.v3.component.ComponentRegistry;
+import org.ladysnake.cca.api.v3.component.sync.AutoSyncedComponent;
+import org.ladysnake.cca.api.v3.component.tick.CommonTickingComponent;
+
+public class AutoStartComponent implements AutoSyncedComponent, CommonTickingComponent {
+    public static final ComponentKey<AutoStartComponent> KEY = ComponentRegistry.getOrCreate(TMM.id("autostart"), AutoStartComponent.class);
+    public final World world;
+    public int startTime;
+    public int time;
+
+    public AutoStartComponent(World world) {
+        this.world = world;
+    }
+
+    public void sync() {
+        KEY.sync(this.world);
+    }
+
+    public void reset() {
+        this.setTime(this.startTime);
+    }
+
+    @Override
+    public void tick() {
+        if (GameWorldComponent.KEY.get(this.world).isRunning()) return;
+
+        if (this.startTime <= 0 && this.time <= 0) return;
+
+        if (GameFunctions.getReadyPlayerCount(world) >= GameConstants.MIN_PLAYER_COUNT) {
+            if (this.time-- <= 0 && this.world instanceof ServerWorld serverWorld) {
+                if (GameWorldComponent.KEY.get(world).getGameStatus() == GameWorldComponent.GameStatus.INACTIVE) {
+                    GameWorldComponent.GameMode gameMode = GameWorldComponent.GameMode.MURDER;
+                    GameFunctions.startGame(serverWorld, gameMode, GameConstants.getInTicks(gameMode.startTime, 0));
+                    return;
+                }
+            }
+
+            if (this.getTime() % 20 == 0) {
+                this.sync();
+            }
+        } else {
+            this.setTime(this.startTime);
+        }
+    }
+
+    public boolean isAutoStartActive() {
+        return startTime > 0;
+    }
+
+    public boolean hasTime() {
+        return this.time > 0;
+    }
+
+    public int getTime() {
+        return this.time;
+    }
+
+    public void addTime(int time) {
+        this.setTime(this.time + time);
+    }
+
+    public void setStartTime(int time) {
+        this.startTime = time;
+    }
+
+    public void setTime(int time) {
+        this.time = time;
+        this.sync();
+    }
+
+    @Override
+    public void writeToNbt(@NotNull NbtCompound tag, RegistryWrapper.WrapperLookup registryLookup) {
+        tag.putInt("startTime", this.startTime);
+        tag.putInt("time", this.time);
+    }
+
+    @Override
+    public void readFromNbt(@NotNull NbtCompound tag, RegistryWrapper.WrapperLookup registryLookup) {
+        this.startTime = tag.getInt("startTime");
+        this.time = tag.getInt("time");
+    }
+}

@@ -37,10 +37,7 @@ import net.minecraft.util.math.BlockBox;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Box;
 import net.minecraft.util.math.Vec3d;
-import net.minecraft.world.Difficulty;
-import net.minecraft.world.GameMode;
-import net.minecraft.world.GameRules;
-import net.minecraft.world.TeleportTarget;
+import net.minecraft.world.*;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -48,6 +45,7 @@ import java.util.*;
 import java.util.function.UnaryOperator;
 
 public class GameFunctions {
+
     public static void limitPlayerToBox(ServerPlayerEntity player, Box box) {
         Vec3d playerPos = player.getPos();
 
@@ -87,7 +85,7 @@ public class GameFunctions {
         component.setGameMode(gameMode);
         GameTimeComponent.KEY.get(world).setResetTime(time);
 
-        if (playerCount >= 6 || gameMode != GameWorldComponent.GameMode.MURDER) {
+        if (playerCount >= GameConstants.MIN_PLAYER_COUNT || gameMode != GameWorldComponent.GameMode.MURDER) {
             component.setGameStatus(GameWorldComponent.GameStatus.STARTING);
         } else {
             for (ServerPlayerEntity player : world.getPlayers()) {
@@ -523,6 +521,11 @@ public class GameFunctions {
             return false;
         }
         return false;
+    }
+
+    public static int getReadyPlayerCount(World world) {
+        var players = world.getPlayers();
+        return Math.toIntExact(players.stream().filter(p -> GameConstants.READY_AREA.contains(p.getPos())).count());
     }
 
     public enum WinStatus {

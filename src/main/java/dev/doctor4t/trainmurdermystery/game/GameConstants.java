@@ -21,6 +21,7 @@ public interface GameConstants {
     // Logistics
     int FADE_TIME = 40;
     int FADE_PAUSE = 20;
+    int MIN_PLAYER_COUNT = 6;
 
     // Blocks
     int DOOR_AUTOCLOSE_TIME = getInTicks(0, 5);

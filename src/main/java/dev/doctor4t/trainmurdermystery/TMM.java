@@ -26,8 +26,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Optional;
-import java.util.function.Consumer;
-import java.util.function.Supplier;
 
 public class TMM implements ModInitializer {
     public static final String MOD_ID = "trainmurdermystery";
@@ -68,6 +66,7 @@ public class TMM implements ModInitializer {
             SetTimerCommand.register(dispatcher);
             SetMoneyCommand.register(dispatcher);
             SetBoundCommand.register(dispatcher);
+            AutoStartCommand.register(dispatcher);
         }));
 
         PayloadTypeRegistry.playS2C().register(ShootMuzzleS2CPayload.ID, ShootMuzzleS2CPayload.CODEC);
@@ -127,7 +126,6 @@ public class TMM implements ModInitializer {
             player.sendMessage(Text.translatable("commands.supporter_only"));
             return 0;
         }
-
     }
 }
 

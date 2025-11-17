@@ -37,7 +37,9 @@ public class TMMLangGen extends FabricLanguageProvider {
 //        builder.add("tip.letter.detective.tooltip4", "Perfect situation to corner but need to keep targets safe.");
 
         builder.add("lobby.players.count", "Players boarded: %s / %s");
-        builder.add("lobby.credit", "Thank you for playing The Last Voyage of the Harpy Express!\nMe and my team spent a lot of time working\non this mod and we hope you enjoy it.\nIf you do and wish to make a video or stream\nplease make sure to credit me and my video!\n - RAT / doctor4t");
+        builder.add("lobby.autostart.active", "Game will start once 6+ players are boarded");
+        builder.add("lobby.autostart.time", "Game starting in %ss");
+        builder.add("lobby.autostart.starting", "Game starting");
 
         builder.add("announcement.role.civilian", "Civilian!");
         builder.add("announcement.role.vigilante", "Vigilante!");
